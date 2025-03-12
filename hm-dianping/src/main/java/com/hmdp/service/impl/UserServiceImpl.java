@@ -12,9 +12,7 @@ import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.tools.Log;
-import com.hmdp.utils.RedisConstants;
-import com.hmdp.utils.RegexUtils;
-import com.hmdp.utils.SystemConstants;
+import com.hmdp.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -93,10 +91,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         .setFieldValueEditor((fieldName,fieldValue)->fieldValue.toString()));
 
             stringRedisTemplate.opsForHash().putAll(RedisConstants.LOGIN_USER_KEY+token,map);
-            stringRedisTemplate.expire(token,RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
+            stringRedisTemplate.expire(token,RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
             return Result.ok(token);
         }else{
             return Result.fail("验证码错误");
         }
+    }
+
+    @Override
+    public void logout() {
+        String token=ThreadLocalUtils.getToken();
+        System.out.println(token);
+        stringRedisTemplate.delete(RedisConstants.LOGIN_USER_KEY+ThreadLocalUtils.getToken());
+
     }
 }
