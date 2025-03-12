@@ -1,6 +1,7 @@
 package com.hmdp.utils;
 
 import com.hmdp.dto.UserDTO;
+import com.hmdp.entity.User;
 
 public class UserHolder {
     private static final ThreadLocal<UserDTO> tl = new ThreadLocal<>();
@@ -16,4 +17,5 @@ public class UserHolder {
     public static void removeUser(){
         tl.remove();
     }
+
 }
