@@ -6,6 +6,7 @@ import com.hmdp.dto.Result;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
+import com.hmdp.tools.Log;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.SystemConstants;
 import org.springframework.stereotype.Service;
@@ -26,14 +27,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Result sendCode(String phone, HttpSession session) {
         //验证手机号是否合法
-        System.out.println(phone);
         if(RegexUtils.isPhoneInvalid(phone)){
             return Result.fail("手机号格式错误");
         }
         //生成验证码
         String code= RandomUtil.randomString(6);
         session.setAttribute("code",code);
-        System.out.println("验证码为"+code);
+        System.out.println(Log.INFO+"验证码为"+code);
         return Result.ok();
     }
 }

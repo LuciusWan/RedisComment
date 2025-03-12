@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  * @author 虎哥
  * @since 2021-12-22
  */
-@Data
+
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("tb_shop")
@@ -106,4 +106,287 @@ public class Shop implements Serializable {
 
     @TableField(exist = false)
     private Double distance;
+
+    public Shop() {
+    }
+
+    public Shop(Long id, String name, Long typeId, String images, String area, String address, Double x, Double y, Long avgPrice, Integer sold, Integer comments, Integer score, String openHours, LocalDateTime createTime, LocalDateTime updateTime, Double distance) {
+
+        this.id = id;
+        this.name = name;
+        this.typeId = typeId;
+        this.images = images;
+        this.area = area;
+        this.address = address;
+        this.x = x;
+        this.y = y;
+        this.avgPrice = avgPrice;
+        this.sold = sold;
+        this.comments = comments;
+        this.score = score;
+        this.openHours = openHours;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+        this.distance = distance;
+    }
+
+    /**
+     * 获取
+     * @return id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * 设置
+     * @param id
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * 获取
+     * @return name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * 设置
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * 获取
+     * @return typeId
+     */
+    public Long getTypeId() {
+        return typeId;
+    }
+
+    /**
+     * 设置
+     * @param typeId
+     */
+    public void setTypeId(Long typeId) {
+        this.typeId = typeId;
+    }
+
+    /**
+     * 获取
+     * @return images
+     */
+    public String getImages() {
+        return images;
+    }
+
+    /**
+     * 设置
+     * @param images
+     */
+    public void setImages(String images) {
+        this.images = images;
+    }
+
+    /**
+     * 获取
+     * @return area
+     */
+    public String getArea() {
+        return area;
+    }
+
+    /**
+     * 设置
+     * @param area
+     */
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    /**
+     * 获取
+     * @return address
+     */
+    public String getAddress() {
+        return address;
+    }
+
+    /**
+     * 设置
+     * @param address
+     */
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    /**
+     * 获取
+     * @return x
+     */
+    public Double getX() {
+        return x;
+    }
+
+    /**
+     * 设置
+     * @param x
+     */
+    public void setX(Double x) {
+        this.x = x;
+    }
+
+    /**
+     * 获取
+     * @return y
+     */
+    public Double getY() {
+        return y;
+    }
+
+    /**
+     * 设置
+     * @param y
+     */
+    public void setY(Double y) {
+        this.y = y;
+    }
+
+    /**
+     * 获取
+     * @return avgPrice
+     */
+    public Long getAvgPrice() {
+        return avgPrice;
+    }
+
+    /**
+     * 设置
+     * @param avgPrice
+     */
+    public void setAvgPrice(Long avgPrice) {
+        this.avgPrice = avgPrice;
+    }
+
+    /**
+     * 获取
+     * @return sold
+     */
+    public Integer getSold() {
+        return sold;
+    }
+
+    /**
+     * 设置
+     * @param sold
+     */
+    public void setSold(Integer sold) {
+        this.sold = sold;
+    }
+
+    /**
+     * 获取
+     * @return comments
+     */
+    public Integer getComments() {
+        return comments;
+    }
+
+    /**
+     * 设置
+     * @param comments
+     */
+    public void setComments(Integer comments) {
+        this.comments = comments;
+    }
+
+    /**
+     * 获取
+     * @return score
+     */
+    public Integer getScore() {
+        return score;
+    }
+
+    /**
+     * 设置
+     * @param score
+     */
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    /**
+     * 获取
+     * @return openHours
+     */
+    public String getOpenHours() {
+        return openHours;
+    }
+
+    /**
+     * 设置
+     * @param openHours
+     */
+    public void setOpenHours(String openHours) {
+        this.openHours = openHours;
+    }
+
+    /**
+     * 获取
+     * @return createTime
+     */
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    /**
+     * 设置
+     * @param createTime
+     */
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    /**
+     * 获取
+     * @return updateTime
+     */
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    /**
+     * 设置
+     * @param updateTime
+     */
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    /**
+     * 获取
+     * @return distance
+     */
+    public Double getDistance() {
+        return distance;
+    }
+
+    /**
+     * 设置
+     * @param distance
+     */
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
+
+    public String toString() {
+        return "Shop{serialVersionUID = " + serialVersionUID + ", id = " + id + ", name = " + name + ", typeId = " + typeId + ", images = " + images + ", area = " + area + ", address = " + address + ", x = " + x + ", y = " + y + ", avgPrice = " + avgPrice + ", sold = " + sold + ", comments = " + comments + ", score = " + score + ", openHours = " + openHours + ", createTime = " + createTime + ", updateTime = " + updateTime + ", distance = " + distance + "}";
+    }
 }

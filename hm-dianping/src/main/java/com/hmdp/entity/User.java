@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * @author 虎哥
  * @since 2021-12-22
  */
-@Data
+
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("tb_user")
@@ -63,4 +63,133 @@ public class User implements Serializable {
     private LocalDateTime updateTime;
 
 
+    public User() {
+    }
+
+    public User( Long id, String phone, String password, String nickName, String icon, LocalDateTime createTime, LocalDateTime updateTime) {
+
+        this.id = id;
+        this.phone = phone;
+        this.password = password;
+        this.nickName = nickName;
+        this.icon = icon;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+    }
+
+    /**
+     * 获取
+     * @return id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * 设置
+     * @param id
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * 获取
+     * @return phone
+     */
+    public String getPhone() {
+        return phone;
+    }
+
+    /**
+     * 设置
+     * @param phone
+     */
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    /**
+     * 获取
+     * @return password
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * 设置
+     * @param password
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * 获取
+     * @return nickName
+     */
+    public String getNickName() {
+        return nickName;
+    }
+
+    /**
+     * 设置
+     * @param nickName
+     */
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    /**
+     * 获取
+     * @return icon
+     */
+    public String getIcon() {
+        return icon;
+    }
+
+    /**
+     * 设置
+     * @param icon
+     */
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    /**
+     * 获取
+     * @return createTime
+     */
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    /**
+     * 设置
+     * @param createTime
+     */
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    /**
+     * 获取
+     * @return updateTime
+     */
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    /**
+     * 设置
+     * @param updateTime
+     */
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public String toString() {
+        return "User{serialVersionUID = " + serialVersionUID + ", id = " + id + ", phone = " + phone + ", password = " + password + ", nickName = " + nickName + ", icon = " + icon + ", createTime = " + createTime + ", updateTime = " + updateTime + "}";
+    }
 }
