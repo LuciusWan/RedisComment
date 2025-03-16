@@ -91,6 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                         .setFieldValueEditor((fieldName,fieldValue)->fieldValue.toString()));
 
             stringRedisTemplate.opsForHash().putAll(RedisConstants.LOGIN_USER_KEY+token,map);
+            System.out.println(token);
             stringRedisTemplate.expire(token,RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
             return Result.ok(token);
         }else{
