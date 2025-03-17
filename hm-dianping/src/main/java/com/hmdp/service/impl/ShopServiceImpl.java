@@ -8,12 +8,18 @@ import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.RedisConstants;
+import com.hmdp.utils.RedisData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,13 +35,16 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private static final Logger logger = LoggerFactory.getLogger(ShopServiceImpl.class);
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RedisProperties redisProperties;
+
     @Override
     public Result getByIdRedis(Long id) throws InterruptedException {
         String shop= stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_KEY+id);
         //查询到对应的value,并且这个value不是"",则店铺存在,直接返回
         if(shop!=null&&!"".equals(shop)){
-            Shop shopRedis= JSONUtil.toBean(shop,Shop.class);
-            return Result.ok(shopRedis);
+            Shop shop1=JSON.parseObject(shop,Shop.class);
+            return Result.ok(shop1);
         }
         //店铺value不等于null,但是为""，说明缓存和数据库中都没有,直接返回不存在信息
         if(shop!=null){
@@ -44,16 +53,15 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //所有线程同时去抢夺互斥锁资源,只会有一个线程抢到
         if(setLock(RedisConstants.LOCK_SHOP_KEY+id)){
             Shop shop1= getById(id);
-
             //数据没查到,说明这个店铺id不存在,这次缓存穿透了,但是可以把空信息写入redis
             if(shop1==null){
-                stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,"",RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+                stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,"",cacheAvalanche(), TimeUnit.MINUTES);
                 return Result.fail("店铺信息不存在");
             }
             String json= JSON.toJSONString(shop1);
             //查询到店铺,返回店铺信息,并且把信息写入Redis
             if(shop1!=null){
-                stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,json,RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+                stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,json,cacheAvalanche(), TimeUnit.MINUTES);
                 return Result.ok(shop1);
             }
             //所有工作做完后释放锁资源
@@ -65,7 +73,52 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         return Result.fail("店铺信息不存在");
     }
-
+    @Override
+    public Result redisLogicExpireTime(Long id){
+        String shop= stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_KEY+id);
+        logger.info(shop);
+        //查询到对应的value,并且这个value不是"",则店铺存在,直接返回
+        if(shop!=null&&!"".equals(shop)){
+            RedisData redisData=JSONUtil.toBean(shop,RedisData.class);
+            if(redisData.getExpireTime().isAfter(LocalDateTime.now())){
+                Shop shopRedis= redisData.getData();
+                System.out.println(shopRedis);
+                logger.info("查询redis直接输出");
+                return Result.ok(shopRedis);
+            }
+        }
+        //店铺value不等于null,但是为""，说明缓存和数据库中都没有,直接返回不存在信息
+        if(shop!=null&&shop.equals("")){
+            return Result.fail("店铺信息不存在");
+        }
+        //所有线程同时去抢夺互斥锁资源,只会有一个线程抢到
+        if(setLock(RedisConstants.LOCK_SHOP_KEY+id)){
+            Shop shop1= getById(id);
+            //数据没查到,说明这个店铺id不存在,这次缓存穿透了,但是可以把空信息写入redis
+            if(shop1==null){
+                stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,"",cacheAvalanche(), TimeUnit.MINUTES);
+                return Result.fail("店铺信息不存在");
+            }
+            RedisData redisData=new RedisData();
+            redisData.setData(shop1);
+            redisData.setExpireTime(LocalDateTime.now().plusMinutes(cacheAvalanche()));
+            String json= JSON.toJSONString(redisData);
+            //查询到店铺,返回店铺信息,并且把信息写入Redis
+            if(shop1!=null){
+                stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,json,cacheAvalanche(), TimeUnit.MINUTES);
+                return Result.ok(shop1);
+            }
+            //所有工作做完后释放锁资源
+            unLock(RedisConstants.LOCK_SHOP_KEY+id);
+            //其他线程休眠对应的时间后重新尝试获取资源(递归)
+        }else {
+            RedisData redisData=new RedisData();
+            redisData.setData(JSONUtil.toBean(shop,Shop.class));
+            Shop redis=redisData.getData();
+            return Result.ok(redis);
+        }
+        return Result.fail("店铺信息不存在");
+    }
     @Override
     public Result updateByRedis(Shop shop) {
         //更新操作先修改数据库再删除缓存可以让错误概率较低
@@ -80,7 +133,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return Result.ok();
     }
     private Boolean setLock(String key){
-        Boolean flag= stringRedisTemplate.opsForValue().setIfAbsent(key,"1",10,TimeUnit.SECONDS);
+        Boolean flag= stringRedisTemplate.opsForValue().setIfAbsent(key,"lock!!!",10,TimeUnit.SECONDS);
         if(flag==null){
             return false;
         }else if(flag){
@@ -117,4 +170,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         return null;
     }
+    private Long cacheAvalanche(){
+        Random random=new Random();
+        Long number=random.nextInt(11)+20L;
+        return number;
+    }
+
+
 }
