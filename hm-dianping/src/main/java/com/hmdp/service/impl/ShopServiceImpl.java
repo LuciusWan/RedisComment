@@ -152,11 +152,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             return shopRedis;
         }
         //店铺value不等于null,但是为""，说明缓存和数据库中都没有,直接返回不存在信息
-        if(shop!=null){
-            return null;
-        }
         Shop shop1= getById(id);
-
         //数据没查到,说明这个店铺id不存在,这次缓存穿透了,但是可以把空信息写入redis
         if(shop1==null){
             stringRedisTemplate.opsForValue().set(RedisConstants.CACHE_SHOP_KEY+id,"",RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
