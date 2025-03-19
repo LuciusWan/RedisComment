@@ -11,6 +11,8 @@ import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisId;
 import com.hmdp.utils.ThreadLocalUtils;
 import com.hmdp.utils.UserHolder;
+import org.springframework.aop.framework.AopContext;
+import org.springframework.aop.framework.AopProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -59,7 +61,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         Long userId =UserHolder.getUser().getId();
         synchronized (userId.toString().intern()) {
-            return createVoucherOrder(voucherId);
+            IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
+            return proxy.createVoucherOrder(voucherId);
         }
     }
     @Transactional(rollbackFor = Exception.class)
