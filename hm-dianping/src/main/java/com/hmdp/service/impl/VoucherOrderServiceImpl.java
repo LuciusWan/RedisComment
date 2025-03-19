@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -36,8 +37,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private SeckillVoucherMapper seckillVoucherMapper;
     @Autowired
     private RedisId redisId;
+    @Autowired
+    private SeckillVoucherServiceImpl seckillVoucherServiceImpl;
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Result order(Long voucherId) {
         //查询优惠券信息
         SeckillVoucher seckillVoucher = seckillVoucherMapper.selectById(voucherId);
@@ -49,26 +52,41 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }else if (timeEnd.isBefore(LocalDateTime.now())){
             return Result.fail("秒杀活动现已结束");
         }
-        //开始的话看库存够不够,够就库存减一,并且创建订单
         Integer number =seckillVoucher.getStock();
-        if(number>=1){
-            number--;
-            seckillVoucher.setStock(number);
-            seckillVoucherMapper.updateById(seckillVoucher);
-            Long id= UserHolder.getUser().getId();
-            VoucherOrder voucherOrder=new VoucherOrder();
-            voucherOrder.setVoucherId(voucherId);
-            voucherOrder.setUserId(id);
-            voucherOrder.setCreateTime(LocalDateTime.now());
-            voucherOrder.setUpdateTime(LocalDateTime.now());
-            voucherOrder.setPayTime(LocalDateTime.now());
-            voucherOrder.setStatus(1);
-            voucherOrder.setId(redisId.nextId("order"));
-            voucherOrderMapper.insert(voucherOrder);
-            return Result.ok(voucherOrder.getVoucherId()+"下单成功");
-        }//库存不够就返回异常
-        else {
-            return Result.fail("优惠券已经卖完");
+        //库存不够就返回异常
+        if(number<1){
+            return Result.fail("库存不足");
         }
+        Long userId =UserHolder.getUser().getId();
+        synchronized (userId.toString().intern()) {
+            return createVoucherOrder(voucherId);
+        }
+    }
+    @Transactional(rollbackFor = Exception.class)
+    public Result createVoucherOrder(Long voucherId) {
+        //开始的话看库存够不够,够就库存减一,并且创建订单
+        List<VoucherOrder> list=voucherOrderMapper.selectByUserId(voucherId,UserHolder.getUser().getId());
+        if(!list.isEmpty()){
+            return Result.fail("该用户已下过单");
+        }
+        Boolean success=seckillVoucherServiceImpl.update()
+                .setSql("stock=stock-1")
+                .eq("voucher_id", voucherId)
+                .gt("stock", 0)
+                .update();
+        if(!success){
+            return Result.fail("库存不足");
+        }
+        Long id= UserHolder.getUser().getId();
+        VoucherOrder voucherOrder=new VoucherOrder();
+        voucherOrder.setVoucherId(voucherId);
+        voucherOrder.setUserId(id);
+        voucherOrder.setCreateTime(LocalDateTime.now());
+        voucherOrder.setUpdateTime(LocalDateTime.now());
+        voucherOrder.setPayTime(LocalDateTime.now());
+        voucherOrder.setStatus(1);
+        voucherOrder.setId(redisId.nextId("order"));
+        voucherOrderMapper.insert(voucherOrder);
+        return Result.ok(voucherOrder.getVoucherId() + "下单成功");
     }
 }
