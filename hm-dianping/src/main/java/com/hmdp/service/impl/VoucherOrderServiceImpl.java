@@ -7,10 +7,7 @@ import com.hmdp.mapper.SeckillVoucherMapper;
 import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.hmdp.utils.RedisConstants;
-import com.hmdp.utils.RedisId;
-import com.hmdp.utils.ThreadLocalUtils;
-import com.hmdp.utils.UserHolder;
+import com.hmdp.utils.*;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,9 +57,16 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("库存不足");
         }
         Long userId =UserHolder.getUser().getId();
-        synchronized (userId.toString().intern()) {
+        SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
+        Boolean isLock=lock.tryLock(1200L);
+        if(!isLock){
+            return Result.fail("一人只能买一张票");
+        }
+        try{
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
+        }finally {
+                lock.unlock();
         }
     }
     @Transactional(rollbackFor = Exception.class)
