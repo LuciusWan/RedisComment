@@ -8,6 +8,8 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.*;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisClient;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.aop.framework.AopProxy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -38,9 +41,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private RedisId redisId;
     @Autowired
     private SeckillVoucherServiceImpl seckillVoucherServiceImpl;
+    @Autowired
+    private RedissonClient redissonClient;
 
     @Override
-    public Result order(Long voucherId) {
+    public Result order(Long voucherId) throws InterruptedException {
         //查询优惠券信息
         SeckillVoucher seckillVoucher = seckillVoucherMapper.selectById(voucherId);
         //判断秒杀是否开始
@@ -58,6 +63,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         Long userId =UserHolder.getUser().getId();
         SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
+        Boolean isLock1=redissonClient.getLock("order"+userId).tryLock(1L, TimeUnit.SECONDS);
         Boolean isLock=lock.tryLock(1200L);
         if(!isLock){
             return Result.fail("一人只能买一张票");

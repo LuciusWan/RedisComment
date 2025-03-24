@@ -1,13 +1,21 @@
 package com.hmdp.utils;
-
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
-import java.util.UUID;
+
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 public class SimpleRedisLock implements ILock {
     private StringRedisTemplate stringRedisTemplate;
     private static final String LOCK_PREFIX = "lock:";
     private static final String ID_PREFIX = UUID.randomUUID().toString();
+    private static DefaultRedisScript<Long> UNLOCK_SCRIPT;
+    static {
+        UNLOCK_SCRIPT = new DefaultRedisScript<>();
+        UNLOCK_SCRIPT.setLocation(new ClassPathResource("unLock.lua"));
+        UNLOCK_SCRIPT.setResultType(Long.class);
+    }
     private String lockName;
     public SimpleRedisLock(String lockName,StringRedisTemplate stringRedisTemplate) {
         this.lockName = lockName;
@@ -23,11 +31,20 @@ public class SimpleRedisLock implements ILock {
 
     @Override
     public void unlock() {
+        List list = new ArrayList();
+        list.add(LOCK_PREFIX+lockName);
+        stringRedisTemplate.execute(
+                UNLOCK_SCRIPT,
+                list,
+                ID_PREFIX+ Thread.currentThread().getId());
+    }
+
+    /*@Override
+    public void unlock() {
         String UnlockName= stringRedisTemplate.opsForValue().get(LOCK_PREFIX+lockName);
         String threadId =ID_PREFIX+ Thread.currentThread().getId();
         if(threadId.equals(UnlockName)){
             stringRedisTemplate.delete(LOCK_PREFIX+lockName);
         }
-
-    }
+    }*/
 }
