@@ -8,6 +8,7 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.*;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisClient;
 import org.springframework.aop.framework.AopContext;
@@ -62,10 +63,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("库存不足");
         }
         Long userId =UserHolder.getUser().getId();
-        SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
-        Boolean isLock1=redissonClient.getLock("order"+userId).tryLock(1L, TimeUnit.SECONDS);
-        Boolean isLock=lock.tryLock(1200L);
-        if(!isLock){
+        //SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
+        RLock lock=redissonClient.getLock("order"+userId);
+        Boolean isLock1=lock.tryLock(1L, TimeUnit.SECONDS);
+        //Boolean isLock=lock.tryLock(1200L);
+        if(!isLock1){
             return Result.fail("一人只能买一张票");
         }
         try{
