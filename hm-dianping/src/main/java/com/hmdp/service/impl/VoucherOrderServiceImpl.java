@@ -43,8 +43,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Autowired
     private SeckillVoucherServiceImpl seckillVoucherServiceImpl;
     @Autowired
-    private RedissonClient redissonClient;
-
+    private RedissonClient redisson6379;
+    @Autowired
+    private RedissonClient redisson6380;
+    @Autowired
+    private RedissonClient redisson6381;
     @Override
     public Result order(Long voucherId) throws InterruptedException {
         //查询优惠券信息
@@ -64,7 +67,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         Long userId =UserHolder.getUser().getId();
         //SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
-        RLock lock=redissonClient.getLock("order"+userId);
+        RLock lock1=redisson6379.getLock("lock:order:"+userId);
+        RLock lock2=redisson6380.getLock("lock:order:"+userId);
+        RLock lock3=redisson6381.getLock("lock:order:"+userId);
+        RLock lock=redisson6380.getMultiLock(lock1,lock2,lock3);
         Boolean isLock1=lock.tryLock(1L, TimeUnit.SECONDS);
         //Boolean isLock=lock.tryLock(1200L);
         if(!isLock1){
@@ -74,7 +80,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
         }finally {
-                lock.unlock();
+            System.out.println("id为"+userId+"的顾客买到票了");
+            lock.unlock();
         }
     }
     @Transactional(rollbackFor = Exception.class)
