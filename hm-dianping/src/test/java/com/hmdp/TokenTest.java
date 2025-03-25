@@ -16,11 +16,12 @@ import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
 public class TokenTest {
+    private static final Integer NUMBER_OF_TOKEN = 1000;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     @Test
     public void test() {
-        for (Integer i = 1; i < 1001; i++) {
+        for (Integer i = 1; i < NUMBER_OF_TOKEN+1; i++) {
             Map<String, String> map = new HashMap<>();
             map.put("nickName", "");
             map.put("icon", "");
