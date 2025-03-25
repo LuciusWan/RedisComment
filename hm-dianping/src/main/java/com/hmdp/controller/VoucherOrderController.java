@@ -23,7 +23,7 @@ public class VoucherOrderController {
     @Autowired
     private IVoucherOrderService voucherOrderService;
     @PostMapping("seckill/{id}")
-    public Result seckillVoucher(@PathVariable("id") Long voucherId) {
+    public Result seckillVoucher(@PathVariable("id") Long voucherId) throws InterruptedException {
         return voucherOrderService.order(voucherId);
     }
 }

@@ -8,6 +8,7 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.*;
+import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisClient;
 import org.springframework.aop.framework.AopContext;
@@ -42,8 +43,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Autowired
     private SeckillVoucherServiceImpl seckillVoucherServiceImpl;
     @Autowired
-    private RedissonClient redissonClient;
-
+    private RedissonClient redisson6379;
+    @Autowired
+    private RedissonClient redisson6380;
+    @Autowired
+    private RedissonClient redisson6381;
     @Override
     public Result order(Long voucherId) throws InterruptedException {
         //查询优惠券信息
@@ -62,17 +66,22 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("库存不足");
         }
         Long userId =UserHolder.getUser().getId();
-        SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
-        Boolean isLock1=redissonClient.getLock("order"+userId).tryLock(1L, TimeUnit.SECONDS);
-        Boolean isLock=lock.tryLock(1200L);
-        if(!isLock){
+        //SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
+        RLock lock1=redisson6379.getLock("lock:order:"+userId);
+        RLock lock2=redisson6380.getLock("lock:order:"+userId);
+        RLock lock3=redisson6381.getLock("lock:order:"+userId);
+        RLock lock=redisson6380.getMultiLock(lock1,lock2,lock3);
+        Boolean isLock1=lock.tryLock(1L, TimeUnit.SECONDS);
+        //Boolean isLock=lock.tryLock(1200L);
+        if(!isLock1){
             return Result.fail("一人只能买一张票");
         }
         try{
             IVoucherOrderService proxy = (IVoucherOrderService) AopContext.currentProxy();
             return proxy.createVoucherOrder(voucherId);
         }finally {
-                lock.unlock();
+            System.out.println("id为"+userId+"的顾客买到票了");
+            lock.unlock();
         }
     }
     @Transactional(rollbackFor = Exception.class)
