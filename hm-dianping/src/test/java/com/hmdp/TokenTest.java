@@ -1,19 +1,13 @@
 package com.hmdp;
-
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.bean.copier.CopyOptions;
 import com.hmdp.utils.RedisConstants;
-import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 @SpringBootTest
 public class TokenTest {
     private static final Integer NUMBER_OF_TOKEN = 1000;
