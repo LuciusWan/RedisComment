@@ -1,5 +1,4 @@
 package com.hmdp.service.impl;
-
 import com.hmdp.dto.Result;
 import com.hmdp.entity.SeckillVoucher;
 import com.hmdp.entity.VoucherOrder;
@@ -8,11 +7,14 @@ import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.IVoucherOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.*;
+import io.lettuce.core.Consumer;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.aop.framework.AopProxy;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,9 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -52,21 +56,26 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private RedissonClient redisson6380;
     @Autowired
     private RedissonClient redisson6381;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
     private IVoucherOrderService proxy;
+    private BlockingQueue<VoucherOrder> queue=new ArrayBlockingQueue<VoucherOrder>(1024*1024);
     private  DefaultRedisScript<Long> TICKET_SNATCHING_SCRIPT;
     {
         TICKET_SNATCHING_SCRIPT = new DefaultRedisScript<>();
         TICKET_SNATCHING_SCRIPT.setLocation(new ClassPathResource("TicketSnatching.lua"));
         TICKET_SNATCHING_SCRIPT.setResultType(Long.class);
     }
-    //创建阻塞队列
-    private BlockingQueue<VoucherOrder> queue=new ArrayBlockingQueue<VoucherOrder>(1024*1024);
+    /*//创建阻塞队列
+    private BlockingQueue<VoucherOrder> queue=new ArrayBlockingQueue<VoucherOrder>(1024*1024);*/
     //创建线程池
     private static final ExecutorService SECKILL_ORDER_EXECUTOR= Executors.newSingleThreadExecutor();
     @PostConstruct
     private void init(){
         SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
     }
+    //给线程池分配任务
+
     //给线程池分配任务
     private class VoucherOrderHandler implements Runnable{
         @Override
@@ -117,25 +126,28 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //List<String> ARGS = new ArrayList<>();
         KEYS.add("Inventory"+voucherId+":stock");
         KEYS.add("Inventory"+voucherId+":set");
+        Long id=redisId.nextId("order");
         Long result = stringRedisTemplate.execute(TICKET_SNATCHING_SCRIPT, KEYS, UserHolder.getUser().getId()+"");
         if(result==1){
             return Result.fail("没票了");
         }else if (result==2){
             return Result.fail("一个人不能抢多张票");
         }
-        Long id= UserHolder.getUser().getId();
+        Long userId= UserHolder.getUser().getId();
         VoucherOrder voucherOrder=new VoucherOrder();
         voucherOrder.setVoucherId(voucherId);
-        voucherOrder.setUserId(id);
+        voucherOrder.setUserId(userId);
         voucherOrder.setCreateTime(LocalDateTime.now());
         voucherOrder.setUpdateTime(LocalDateTime.now());
         voucherOrder.setPayTime(LocalDateTime.now());
         voucherOrder.setStatus(1);
-        voucherOrder.setId(redisId.nextId("order"));
-        queue.add(voucherOrder);
+        voucherOrder.setId(id);
+        // 使用 RabbitMQ 发送消息
+        rabbitTemplate.convertAndSend("voucher_order_queue", voucherOrder);
+        //queue.add(voucherOrder);
         //获取代理对象
         proxy=(IVoucherOrderService) AopContext.currentProxy();
-        return Result.ok("下单成功");
+        return Result.ok("下单成功"+id);
     }
     @Transactional(rollbackFor = Exception.class)
     public void createVoucherOrder(VoucherOrder voucherOrder) {

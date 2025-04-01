@@ -4,12 +4,16 @@
 --- DateTime: 2025/3/26 15:40
 ---获取数量
 local stock=redis.call('get',KEYS[1])
+local userId=ARGV[1]
+---local voucherId=ARGV[2]
+---local orderId=ARGV[3]
 if(tonumber(stock)<1) then
     return 1
 end
-local success = redis.call('SADD', KEYS[2], ARGV[1])
+local success = redis.call('SADD', KEYS[2], userId)
 if(success==0) then
     return 2
 end
 redis.call('decr',KEYS[1])
+---redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',orderId)
 return 0

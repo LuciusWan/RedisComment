@@ -23,7 +23,7 @@ public class TokenTest {
             String token= UUID.randomUUID().toString();
             stringRedisTemplate.opsForHash().putAll(RedisConstants.LOGIN_USER_KEY+token,map);
             System.out.println(token);
-            stringRedisTemplate.expire(token, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+            stringRedisTemplate.expire(RedisConstants.LOGIN_USER_KEY+token,RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         }
     }
 }
