@@ -2,6 +2,8 @@ package com.hmdp.mapper;
 
 import com.hmdp.entity.Blog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Update;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>
@@ -12,5 +14,4 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @since 2021-12-22
  */
 public interface BlogMapper extends BaseMapper<Blog> {
-
 }

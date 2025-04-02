@@ -1,6 +1,6 @@
 package com.hmdp.dto;
 
-import lombok.Data;
+
 
 
 public class UserDTO {

@@ -2,7 +2,7 @@ server:
   port: 8083
 spring:
   rabbitmq:
-    host: 192.168.5.12
+    host: 192.168.5.25
     port: 5672
     username: LuciusWan
     password: Wwwaxk12345@
