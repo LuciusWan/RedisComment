@@ -1,6 +1,12 @@
 server:
-  port: 8081
+  port: 8083
 spring:
+  rabbitmq:
+    host: 192.168.5.12
+    port: 5672
+    username: LuciusWan
+    password: Wwwaxk12345@
+    virtual-host: /
   application:
     name: hmdp
   datasource:
