@@ -59,7 +59,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Autowired
     private RabbitTemplate rabbitTemplate;
     private IVoucherOrderService proxy;
-    private BlockingQueue<VoucherOrder> queue=new ArrayBlockingQueue<VoucherOrder>(1024*1024);
+    /*private BlockingQueue<VoucherOrder> queue=new ArrayBlockingQueue<VoucherOrder>(1024*1024);*/
     private  DefaultRedisScript<Long> TICKET_SNATCHING_SCRIPT;
     {
         TICKET_SNATCHING_SCRIPT = new DefaultRedisScript<>();
@@ -68,19 +68,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     }
     /*//创建阻塞队列
     private BlockingQueue<VoucherOrder> queue=new ArrayBlockingQueue<VoucherOrder>(1024*1024);*/
-    //创建线程池
+
+    /*//创建线程池
     private static final ExecutorService SECKILL_ORDER_EXECUTOR= Executors.newSingleThreadExecutor();
     @PostConstruct
     private void init(){
         SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
-    }
+    }*/
 
     public void deleteByVoucherId(Long voucherId) {
         voucherOrderMapper.deleteByVoucherId(voucherId);
     }
-    //给线程池分配任务
-
-    //给线程池分配任务
+    /*//给线程池分配任务
     private class VoucherOrderHandler implements Runnable{
         @Override
         public void run() {
@@ -93,8 +92,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 }
             }
         }
-    }
-    private void voucherHandler(VoucherOrder voucherOrder) throws InterruptedException {
+    }*/
+    /*private void voucherHandler(VoucherOrder voucherOrder) throws InterruptedException {
         Long userId=voucherOrder.getUserId();
         //SimpleRedisLock lock=new SimpleRedisLock("order:"+userId,stringRedisTemplate);
         RLock lock1=redisson6379.getLock("lock:order:"+userId);
@@ -112,7 +111,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             System.out.println("id为"+userId+"的顾客买到票了");
             lock.unlock();
         }
-    }
+    }*/
     @Override
     public Result order(Long voucherId) {
         //查询优惠券信息

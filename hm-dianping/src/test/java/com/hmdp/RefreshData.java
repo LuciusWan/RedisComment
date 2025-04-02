@@ -1,7 +1,5 @@
 package com.hmdp;
 import com.hmdp.mapper.SeckillVoucherMapper;
-import com.hmdp.mapper.VoucherMapper;
-import com.hmdp.mapper.VoucherOrderMapper;
 import com.hmdp.service.impl.VoucherOrderServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
