@@ -74,6 +74,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private void init(){
         SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
     }
+
+    public void deleteByVoucherId(Long voucherId) {
+        voucherOrderMapper.deleteByVoucherId(voucherId);
+    }
     //给线程池分配任务
 
     //给线程池分配任务
