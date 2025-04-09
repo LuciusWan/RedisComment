@@ -23,4 +23,6 @@ public interface IBlogService extends IService<Blog> {
     void updateLike(Long id);
 
     Result selectLike(Long id);
+
+    Result saveBlog(Blog blog);
 }

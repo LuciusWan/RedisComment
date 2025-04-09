@@ -130,6 +130,27 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return Result.ok(userDTOS);
     }
 
+    @Override
+    public Result saveBlog(Blog blog) {
+        // 获取登录用户
+        UserDTO user = UserHolder.getUser();
+        blog.setUserId(user.getId());
+        // 保存探店博文
+        boolean saveSuccess = blogService.save(blog);
+        if(!saveSuccess){
+            return Result.fail("发布笔记失败");
+        }
+        List<Long> idList=userMapper.selectByFollower(user.getId());
+        if(idList!=null&&!idList.isEmpty()){
+            for(Long id:idList){
+                stringRedisTemplate.opsForZSet().add(RedisConstants.FEED_KEY + id, blog.getId().toString(), System.currentTimeMillis());
+            }
+        }
+
+        // 返回id
+        return Result.ok(blog.getId());
+    }
+
     private Boolean isBlogLiked(Long id) {
         UserDTO user=UserHolder.getUser();
         if(user==null){

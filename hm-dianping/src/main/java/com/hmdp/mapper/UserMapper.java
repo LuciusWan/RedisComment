@@ -4,6 +4,8 @@ import com.hmdp.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * <p>
  *  Mapper 接口
@@ -15,4 +17,6 @@ import org.apache.ibatis.annotations.Select;
 public interface UserMapper extends BaseMapper<User> {
     @Select("select * from hmdp.tb_user where phone=#{phone}")
     User selectByPhone(String phone);
+    @Select("select user_id from hmdp.tb_follow where follow_user_id =#{id}")
+    List<Long> selectByFollower(Long id);
 }
