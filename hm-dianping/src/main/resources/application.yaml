@@ -1,6 +1,8 @@
 server:
   port: 8083
 spring:
+  upload:
+    url: C:\Users\86180\Desktop\hmdp-nginx-1.18.0\nginx-1.18.0\html\hmdp\imgs\
   rabbitmq:
     host: 192.168.5.27
     port: 5672

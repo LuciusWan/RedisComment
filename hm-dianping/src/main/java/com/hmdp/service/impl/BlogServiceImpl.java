@@ -5,6 +5,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.ScrollResult;
 import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
@@ -20,11 +21,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -149,6 +152,43 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 
         // 返回id
         return Result.ok(blog.getId());
+    }
+
+    @Override
+    public Result queryBlogByUserId(Long time, Long offset) {
+        Long userId=UserHolder.getUser().getId();
+        Set<ZSetOperations.TypedTuple<String>> typedTuples;
+        if(offset==0){
+            typedTuples= stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(RedisConstants.FEED_KEY + userId, 0, System.currentTimeMillis(), offset, 2);
+        }else{
+            typedTuples = stringRedisTemplate.opsForZSet().reverseRangeByScoreWithScores(RedisConstants.FEED_KEY + userId, 0, time, offset, 2);
+        }
+        if(typedTuples==null|| typedTuples.isEmpty()){
+            return Result.fail("没有文章可以看了捏");
+        }
+        List<Blog> blogs = new ArrayList<>();
+
+        List<Long> score=new ArrayList<>();
+        for (ZSetOperations.TypedTuple<String> object : typedTuples) {
+            score.add(Objects.requireNonNull(object.getScore()).longValue());
+            Blog blog = blogMapper.selectById(Long.parseLong(Objects.requireNonNull(object.getValue())));
+            blogs.add(blog);
+        }
+        int count=1;
+        Long lastScore=score.get(0);
+        for (int i = 1; i < score.size(); i++) {
+            if(score.get(i)!=lastScore){
+                count=1;
+                lastScore=score.get(i);
+            }else{
+                count++;
+            }
+        }
+        ScrollResult scrollResult = new ScrollResult();
+        scrollResult.setList(blogs);
+        scrollResult.setMinTime(score.get(score.size()-1));
+        scrollResult.setOffset(count);
+        return Result.ok(scrollResult);
     }
 
     private Boolean isBlogLiked(Long id) {

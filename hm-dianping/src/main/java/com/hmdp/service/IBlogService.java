@@ -25,4 +25,6 @@ public interface IBlogService extends IService<Blog> {
     Result selectLike(Long id);
 
     Result saveBlog(Blog blog);
+
+    Result queryBlogByUserId(Long time, Long offset);
 }
