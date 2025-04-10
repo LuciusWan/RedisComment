@@ -1,8 +1,10 @@
 server:
   port: 8083
 spring:
+  upload:
+    url: C:\Users\86180\Desktop\hmdp-nginx-1.18.0\nginx-1.18.0\html\hmdp\imgs\
   rabbitmq:
-    host: 192.168.5.12
+    host: 192.168.5.27
     port: 5672
     username: LuciusWan
     password: Wwwaxk12345@
@@ -11,13 +13,13 @@ spring:
     name: hmdp
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/hmdp?useSSL=false&serverTimezone=UTC
     username: root
     password: 123456
   redis:
-    host: 127.0.0.1
+    host: localhost
     port: 6379
-    password: 123456
+    password:
     lettuce:
       pool:
         max-active: 10

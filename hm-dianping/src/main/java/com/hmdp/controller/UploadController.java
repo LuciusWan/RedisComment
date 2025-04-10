@@ -3,8 +3,11 @@ package com.hmdp.controller;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import com.hmdp.dto.Result;
+import com.hmdp.properties.UploadProperties;
 import com.hmdp.utils.SystemConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,7 +19,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("upload")
 public class UploadController {
-
+    @Autowired
+    private UploadProperties uploadProperties;
     @PostMapping("blog")
     public Result uploadImage(@RequestParam("file") MultipartFile image) {
         try {
@@ -25,7 +29,7 @@ public class UploadController {
             // 生成新文件名
             String fileName = createNewFileName(originalFilename);
             // 保存文件
-            image.transferTo(new File(SystemConstants.IMAGE_UPLOAD_DIR, fileName));
+            image.transferTo(new File(uploadProperties.getUrl(), fileName));
             // 返回结果
             //log.debug("文件上传成功，{}", fileName);
             return Result.ok(fileName);
