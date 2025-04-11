@@ -2,6 +2,9 @@ package com.hmdp.mapper;
 
 import com.hmdp.entity.Shop;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,5 +15,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @since 2021-12-22
  */
 public interface ShopMapper extends BaseMapper<Shop> {
-
+    @Select("select * from hmdp.tb_shop where type_id=#{id}")
+    List<Shop> selectByTypeId(Long id);
 }

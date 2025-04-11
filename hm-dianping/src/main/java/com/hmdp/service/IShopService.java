@@ -18,4 +18,6 @@ public interface IShopService extends IService<Shop> {
 
     Result updateByRedis(Shop shop);
     Result redisLogicExpireTime(Long id) throws InterruptedException;
+
+    Result pageByGeo(Integer typeId, Integer current, Double x, Double y);
 }

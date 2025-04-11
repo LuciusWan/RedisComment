@@ -18,19 +18,7 @@ public class TokenTest {
     private static final Integer NUMBER_OF_TOKEN = 1000;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    @Test
-    public void test() {
-        for (Integer i = 1; i < NUMBER_OF_TOKEN+1; i++) {
-            Map<String, String> map = new HashMap<>();
-            map.put("nickName", "");
-            map.put("icon", "");
-            map.put("id", i.toString());
-            String token= UUID.randomUUID().toString();
-            stringRedisTemplate.opsForHash().putAll(RedisConstants.LOGIN_USER_KEY+token,map);
-            System.out.println(token);
-            stringRedisTemplate.expire(RedisConstants.LOGIN_USER_KEY+token,RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
-        }
-    }
+
     @Test
     public void test1() {
         // 指定文件路径
