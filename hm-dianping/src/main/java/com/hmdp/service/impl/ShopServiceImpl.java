@@ -2,6 +2,7 @@ package com.hmdp.service.impl;
 
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
@@ -9,16 +10,26 @@ import com.hmdp.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisData;
+import com.hmdp.utils.SystemConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
+
+import org.springframework.data.redis.domain.geo.GeoReference;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +48,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private RedisProperties redisProperties;
+    @Autowired
+    private ShopMapper shopMapper;
 
     @Override
     public Result getByIdRedis(Long id) throws InterruptedException {
@@ -119,6 +132,58 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         return Result.fail("店铺信息不存在");
     }
+
+    @Override
+    public Result pageByGeo(Integer typeId, Integer current, Double x, Double y) {
+        if(x==null||y==null){
+            Page<Shop> page = query()
+                    .eq("type_id", typeId)
+                    .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
+            // 返回数据
+            return Result.ok(page.getRecords());
+        }
+        //根据店铺类型查询店铺列表
+        int from = (current - 1) * SystemConstants.DEFAULT_PAGE_SIZE;
+        int end = from + SystemConstants.DEFAULT_PAGE_SIZE;
+        String key=RedisConstants.SHOP_GEO_KEY+typeId;
+        GeoResults<RedisGeoCommands.GeoLocation<String>> result = stringRedisTemplate.opsForGeo().search(
+                key,
+                GeoReference.fromCoordinate(x, y),
+                //默认米为单位,5公里
+                new Distance(5000),
+                RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end)
+        );
+        if(result==null){
+            return Result.fail("Redis罢工了");
+        }
+        int sum=0;
+        List<Long> ids=new ArrayList<>();
+        List<Distance> distances=new ArrayList<>();
+        for (GeoResult<RedisGeoCommands.GeoLocation<String>> r : result) {
+            if (sum<from) {
+                sum++;
+                continue;
+            }
+            RedisGeoCommands.GeoLocation<String> location = r.getContent();
+            ids.add(Long.valueOf(location.getName()));
+            distances.add(r.getDistance());
+            /*System.out.println("Member: " + location.getName());
+            System.out.println("Longitude: " + location.getPoint().getX());
+            System.out.println("Latitude: " + location.getPoint().getY());
+            System.out.println("Distance: " + r.getDistance());*/
+        }
+        List<Shop> shops=new ArrayList<>();
+        for (int i =0;i<ids.size();i++) {
+            Shop shop= shopMapper.selectById(ids.get(i));
+            shop.setDistance(Double.valueOf(distances.get(i).toString().replaceAll("[^\\d.]", "")));
+            if(shop!=null){
+                shops.add(shop);
+            }
+        }
+        //stringRedisTemplate.opsForHyperLogLog().add("2025.4.28","hello");
+        return Result.ok(shops);
+    }
+
     @Override
     public Result updateByRedis(Shop shop) {
         //更新操作先修改数据库再删除缓存可以让错误概率较低
@@ -173,4 +238,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
 
+    public List<Shop> listById(Long id) {
+        return shopMapper.selectByTypeId(id);
+    }
 }

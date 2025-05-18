@@ -7,6 +7,9 @@ import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.service.IShopService;
 import com.hmdp.utils.SystemConstants;
+import com.hmdp.utils.UserHolder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -22,7 +25,8 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/shop")
 public class ShopController {
-
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
     @Resource
     public IShopService shopService;
 
@@ -69,14 +73,11 @@ public class ShopController {
     @GetMapping("/of/type")
     public Result queryShopByType(
             @RequestParam("typeId") Integer typeId,
-            @RequestParam(value = "current", defaultValue = "1") Integer current
+            @RequestParam(value = "current", defaultValue = "1") Integer current,
+            @RequestParam(value ="x" ,required = false) Double x,
+            @RequestParam(value ="y",required = false) Double y
     ) {
-        // 根据类型分页查询
-        Page<Shop> page = shopService.query()
-                .eq("type_id", typeId)
-                .page(new Page<>(current, SystemConstants.DEFAULT_PAGE_SIZE));
-        // 返回数据
-        return Result.ok(page.getRecords());
+        return shopService.pageByGeo(typeId, current, x, y);
     }
 
     /**
@@ -94,7 +95,16 @@ public class ShopController {
         Page<Shop> page = shopService.query()
                 .like(StrUtil.isNotBlank(name), "name", name)
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
+        long time=System.currentTimeMillis();
+
         // 返回数据
         return Result.ok(page.getRecords());
     }
+    /*@GetMapping("/of/type")
+    public Result queryShopByType(@RequestParam Integer typeId,
+                                  @RequestParam Integer current,
+                                  @RequestParam Double x,
+                                  @RequestParam Double y) {
+        return shopService.pageByGeo(typeId,current,x,y);
+    }*/
 }

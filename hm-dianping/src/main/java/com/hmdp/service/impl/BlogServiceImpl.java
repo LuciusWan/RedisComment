@@ -1,7 +1,4 @@
 package com.hmdp.service.impl;
-
-import ch.qos.logback.classic.spi.EventArgUtil;
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
@@ -85,6 +82,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 blog.setIsLike(true);
             }
         });
+
         return Result.ok(records);
     }
 
@@ -188,6 +186,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         scrollResult.setList(blogs);
         scrollResult.setMinTime(score.get(score.size()-1));
         scrollResult.setOffset(count);
+        /*stringRedisTemplate.opsForHyperLogLog().add("2025.4.29", UserHolder.getUser().getId().toString());
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++");*/
+
         return Result.ok(scrollResult);
     }
 
