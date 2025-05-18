@@ -3,6 +3,7 @@ package com.hmdp.service.impl;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
@@ -50,10 +52,18 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private RedisProperties redisProperties;
     @Autowired
     private ShopMapper shopMapper;
-
+    @Autowired
+    private Cache<String,Object> caffeineCache;
     @Override
     public Result getByIdRedis(Long id) throws InterruptedException {
-        String shop= stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_KEY+id);
+        String shop= (String) caffeineCache.getIfPresent(RedisConstants.CACHE_SHOP_KEY+id);
+        System.out.println(shop+"====================================================================");
+        if(shop==null){
+            System.out.println(RedisConstants.CACHE_SHOP_KEY+id+"_______________________________________________________________________");
+            System.out.println("redis查询++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            caffeineCache.put(RedisConstants.CACHE_SHOP_KEY+id, shop);
+            shop= stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_KEY+id);
+        }
         //查询到对应的value,并且这个value不是"",则店铺存在,直接返回
         if(shop!=null&&!"".equals(shop)){
             Shop shop1=JSON.parseObject(shop,Shop.class);
@@ -88,7 +98,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
     @Override
     public Result redisLogicExpireTime(Long id){
-        String shop= stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_KEY+id);
+        String shop= (String) caffeineCache.getIfPresent(RedisConstants.CACHE_SHOP_KEY+id);
+        if(shop==null){
+            shop= stringRedisTemplate.opsForValue().get(RedisConstants.CACHE_SHOP_KEY+id);
+            caffeineCache.put(RedisConstants.CACHE_SHOP_KEY+id, shop);
+        }
         logger.info(shop);
         //查询到对应的value,并且这个value不是"",则店铺存在,直接返回
         if(shop!=null&&!"".equals(shop)){
