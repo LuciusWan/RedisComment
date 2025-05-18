@@ -17,16 +17,16 @@ RedisComment 是一个集**餐厅/商铺评分、折扣券购买、社交互动*
 
 ## 🧱 技术栈
 
-| 模块             | 技术/框架                         | 说明                     |
-|------------------|----------------------------------|--------------------------|
-| 后端框架         | Spring Boot 2.3.12               | 构建服务核心             |
-| 数据库           | MySQL 5.1.47                     | 存储持久化数据           |
-| ORM 框架         | MyBatis-Plus 3.4.3               | 简化数据库操作           |
-| 缓存             | Redis + Redisson + Lettuce       | 高性能缓存与分布式锁     |
-| 消息队列         | RabbitMQ                         | 异步订单处理             |
-| 工具类           | Hutool 5.7.17                    | Java 工具封装            |
-| 配置管理         | application.yaml                 | 应用配置文件             |
-| Maven 依赖管理   | pom.xml                          | 项目依赖管理             |
+| 模块             | 技术/框架                                 | 说明           |
+|------------------|---------------------------------------|--------------|
+| 后端框架         | Spring Boot 2.3.12                    | 构建服务核心       |
+| 数据库           | MySQL 5.1.47                          | 存储持久化数据      |
+| ORM 框架         | MyBatis-Plus 3.4.3                    | 简化数据库操作      |
+| 缓存             | Redis + Redisson + Lettuce + Caffeine | 高性能多级缓存与分布式锁 |
+| 消息队列         | RabbitMQ                              | 异步订单处理       |
+| 工具类           | Hutool 5.7.17                         | Java 工具封装    |
+| 配置管理         | application.yaml                      | 应用配置文件       |
+| Maven 依赖管理   | pom.xml                               | 项目依赖管理       |
 
 ---
 
@@ -52,7 +52,7 @@ src/
 ├── main/
 │   ├── java/
 │   │   └── com/hmdp/
-│   │       ├── config/          配置类（如 Redis、Spring Security）
+│   │       ├── config/          配置类（如 Redis、Cache、Spring Security）
 │   │       ├── controller/      REST API 控制器
 │   │       ├── service/         业务逻辑层接口及实现
 │   │       ├── mapper/          MyBatis Plus 映射接口
@@ -74,7 +74,7 @@ src/
 - 使用 **Redis 缓存 + 互斥锁 + TTL 随机化**
 - 支持逻辑过期时间策略，应对热点数据访问
 - 提供空值缓存防止缓存穿透
-
+- 使用Caffeine作为多级缓存框架,让热点数据读取速度更快
 ### ⚡ 高并发秒杀券处理
 
 - 利用 **Redis 原子操作 + Lua 脚本** 控制库存
