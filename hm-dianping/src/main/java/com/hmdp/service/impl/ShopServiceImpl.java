@@ -180,6 +180,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                 shops.add(shop);
             }
         }
+        //stringRedisTemplate.opsForHyperLogLog().add("2025.4.28","hello");
         return Result.ok(shops);
     }
 

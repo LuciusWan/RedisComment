@@ -82,6 +82,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
                 blog.setIsLike(true);
             }
         });
+
         return Result.ok(records);
     }
 
@@ -185,6 +186,9 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         scrollResult.setList(blogs);
         scrollResult.setMinTime(score.get(score.size()-1));
         scrollResult.setOffset(count);
+        /*stringRedisTemplate.opsForHyperLogLog().add("2025.4.29", UserHolder.getUser().getId().toString());
+        System.out.println("+++++++++++++++++++++++++++++++++++++++++++++");*/
+
         return Result.ok(scrollResult);
     }
 

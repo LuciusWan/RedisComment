@@ -1,0 +1,74 @@
+services:
+  springboot-app:
+    image: hmdp:v1.1  # 替换为你的 Spring Boot 应用镜像
+    ports:
+      - "8083:8083"  # 假设 Spring Boot 应用运行在 8080 端口
+    depends_on:
+      - redis-6379
+      - redis-6380
+      - redis-6381
+      - rabbitmq
+      - mysql
+    networks:
+      - my-network
+  springboot-app-2:
+    image: hmdp:v1
+    ports:
+      - "8084:8083"  # 映射8084端口到容器的8080端口
+    depends_on:
+      - redis-6379
+      - redis-6380
+      - redis-6381
+      - rabbitmq
+      - mysql
+    networks:
+      - my-network
+  redis-6379:
+    image: redis:latest
+    ports:
+      - "6379:6379"  # 映射 6379 端口
+    networks:
+      - my-network
+
+  redis-6380:
+    image: redis:latest
+    ports:
+      - "6380:6379"  # 映射 6380 端口
+    networks:
+      - my-network
+
+  redis-6381:
+    image: redis:latest
+    ports:
+      - "6381:6379"  # 映射 6381 端口
+    networks:
+      - my-network
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"  # AMQP协议端口
+      - "15672:15672"  # 管理界面端口
+    environment:
+      RABBITMQ_DEFAULT_USER: LuciusWan
+      RABBITMQ_DEFAULT_PASS: Wwwaxk12345@
+    #volumes:
+    #  - ./rabbitmq/data:/var/lib/rabbitmq
+    networks:
+      - my-network
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: hmdp
+      #MYSQL_USER: your_username
+      #MYSQL_PASSWORD: your_password
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    networks:
+      - my-network
+
+networks:
+  my-network:
